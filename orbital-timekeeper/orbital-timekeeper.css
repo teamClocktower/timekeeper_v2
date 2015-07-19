@@ -1,1 +1,10 @@
-/* CSS declarations go here */
+.header {
+    background-color: #FF9800;
+    height:65px;
+}
+
+.main-area {
+    background-color: #F0F0E1;
+    height:1000px;
+
+}
