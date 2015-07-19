@@ -29,10 +29,10 @@
             <div class="col s8 header">
                 <div class="row">
                     <div class="col s5">
-                        <h5> Timekeeper</h5>
+                        <h4> Timekeeper</h4>
                     </div>
-                    <div class="col s4">&nbsp;</div>
-                    <div class="col s3" ><h4>Login</h4></div>
+                    {{> loginButton}}}
+
 
                 </div>
 
@@ -45,6 +45,20 @@
         </div>
 
     </div>
+</template>
+
+<template name="loginButton">
+    <!--to run if havent login-->
+    <div class="col s3">&nbsp;</div>
+    <ul id="dropdown1" class="dropdown-content">
+        <li><a href="#!">Google Login</a></li>
+        <li class="divider"></li>
+        <li><a href="#!">Facebook Login</a></li>
+        <li class="divider"></li>
+        <li><a href="#!">Nus Login</a></li>
+        <li class="divider"></li>
+        <li><a href="#!">Timekeeper account</a></li>
+    </ul><div class="col s4" ><h4><a class="dropdown-button" href="#!" data-activates="dropdown1" style="color:white;">Login<i class="material-icons right"></i></a></h4></div>
 </template>
 
 <template name="landing">

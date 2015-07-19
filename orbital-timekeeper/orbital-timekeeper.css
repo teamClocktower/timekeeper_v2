@@ -1,10 +1,39 @@
 .header {
     background-color: #FF9800;
     height:65px;
+    color:white
 }
 
 .main-area {
     background-color: #F0F0E1;
     height:1000px;
-
 }
+
+.darkprimary {
+    background-color: #F57C00;
+}
+
+.primary {
+    background: #FF9800;
+}
+
+.lightprimary {
+    background: #FFE0B2;
+}
+
+.accent {
+    background: #607D8B;
+}
+
+.primarytext {
+    color: #212121;
+}
+
+.secondarytext {
+    color: #727272;
+}
+
+.dividercolor {
+    border-color: #B6B6B6;
+}
+
