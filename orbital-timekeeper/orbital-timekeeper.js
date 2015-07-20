@@ -2,11 +2,23 @@ if (Meteor.isClient) {
   // counter starts at 0
   Session.setDefault('counter', 0);
 
-  Template.hello.helpers({
-    counter: function () {
-      return Session.get('counter');
+  Template.header.helpers({
+    'loggedInStatus' : function () {
+        loggedIn = 0;
+        if(loggedIn==0){
+            return "{{>loginButton}}";
+        }
+        else{
+            return "{{>loggedIn}}";
+        }
+
+
     }
   });
+
+  //Template.loggedIn.helpers({
+  //    return "<h5>Welcome"+loginName+"</h5>"
+  //})
 
   Template.hello.events({
     'click button': function () {
@@ -18,6 +30,10 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
   Meteor.startup(function () {
+
     // code to run on server at startup
   });
 }
+
+//database
+//membersList = new.Mongo.Collection('members');
