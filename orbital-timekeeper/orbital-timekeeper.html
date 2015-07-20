@@ -9,7 +9,8 @@
       <div class="row">
           <div class="col s2">&nbsp;</div>
             <div class="col s8 main-area">
-        {{>details}}
+        {{>landing}}
+
             </div>
           <div class="col s2">&nbsp;</div>
       </div>
@@ -116,7 +117,7 @@
             <div class="row center-align">
                 <div class="col s1">&nbsp;</div>
                 <div class="input-field col s10">
-                    <input placeholder="https://nusmods.com/timetable/2015-2016/sem1?ACC3601[SEC]=A2&ACC3603[SEC]=C1&ACC3612[SEC]=F3&AR3151=&AR4001[LEC]=1&ACC4612E[SEC]=E1" id="first_name" type="text" class="validate">
+                    <input placeholder="https://nusmods.com/timetable/2015-2016/sem1?ACC3601[SEC]=A2&ACC3603[SEC]=C1&ACC3612[SEC]=F3&AR3151=&AR4001[LEC]=1&ACC4612E[SEC]=E1" id="input_url" type="text" class="validate">
                     <label for="input_url">NUSMods URL</label>
                 </div>
                 <div class="col s1">&nbsp;</div>
@@ -146,8 +147,8 @@
             <div class="row center-align">
                 <div class="col s1">&nbsp;</div>
                 <div class="input-field col s10">
-                    <input placeholder="E.g timekeeper@gmail.com" id="first_name" type="text" class="validate">
-                    <label for="input_url">Email</label>
+                    <input placeholder="E.g timekeeper@gmail.com" id="input_email" type="text" class="validate">
+                    <label for="input_email">Email</label>
                 </div>
                 <div class="col s1">&nbsp;</div>
             </div>
@@ -162,5 +163,70 @@
     <a class="waves-effect waves-orange btn" style="background-color:#4B4D52;color:#E19F6B;">Next</a>
 
 </div>
+
+</template>
+
+
+<template name="main">
+    <br>
+    <div class="container">
+    <div class="row right-align">
+        <a class="waves-effect waves-orange btn" style="background-color:#D0CABF;color:#4B4C52;">Options</a>
+    </div></div>
+
+
+</template>
+
+<template name="step_3">
+    <br>
+    <div class="row">
+        <div class="col s3">
+            <span style="font-size:24px; color:#727272;">Step 3:</span>
+        </div>
+        <div class="col s9">&nbsp;</div>
+    </div>
+
+    <div class="row center-align">
+
+        <span style="font-size:24px; color:#727272;">Name this schedule</span>
+
+    </div>
+
+    <div class="row center-align">
+        <div class="col s1">&nbsp;</div>
+        <div class="input-field col s10">
+            <input placeholder="E.g CS1231 project group" id="schedule_name" type="text" class="validate">
+            <label for="schedule_name">Email</label>
+        </div>
+        <div class="col s1">&nbsp;</div>
+    </div>
+
+
+</template>
+
+<template name="step_4">
+    <br>
+    <div class="row">
+        <div class="col s3">
+            <span style="font-size:24px; color:#727272;">Step 4:</span>
+        </div>
+        <div class="col s9">&nbsp;</div>
+    </div>
+
+    <div class="row center-align">
+
+        <span style="font-size:24px; color:#727272;">Share this page with your friends!</span>
+
+    </div>
+
+    <div class="row center-align">
+        <div class="col s1">&nbsp;</div>
+        <div class="input-field col s10">
+            <input placeholder="E.g timekeeper@gmail.com" id="share_emails" type="text" class="validate">
+            <label for="share_emails">Friends' emails</label>
+        </div>
+        <div class="col s1">&nbsp;</div>
+    </div>
+
 
 </template>
