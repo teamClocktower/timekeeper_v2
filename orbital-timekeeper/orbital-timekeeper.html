@@ -208,9 +208,10 @@
     {{name}}
     {{unloggedIds}}
 
-    {{#with testhelper}}
-        {{url}}
-        {{/with}}
+    {{#each testhelper}}
+        {{parseUrl}}
+
+    {{/each}}
 
 </template>
 
