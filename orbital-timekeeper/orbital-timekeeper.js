@@ -32,16 +32,15 @@ if (Meteor.isClient) {
                 Router.go('timetable', {_id: results});
             });
 
-
         }
     });
 
     // STUCK HERE
-    Template.timetable.helpers({
+    Template.classTable.helpers({
         'testhelper' : function(){
-            var testlst = this;
-            console.log(this);
-            return this;
+
+
+            return AccountUnlogged.findOne({_id: this.unloggedIds[0]});
         }
     });
   //Template.loggedIn.helpers({

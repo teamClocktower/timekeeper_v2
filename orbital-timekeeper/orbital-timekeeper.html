@@ -207,7 +207,11 @@
 <template name="classTable">
     {{name}}
     {{unloggedIds}}
-    {{testhelper}}
+
+    {{#with testhelper}}
+        {{url}}
+        {{/with}}
+
 </template>
 
 <template name="timetable">
