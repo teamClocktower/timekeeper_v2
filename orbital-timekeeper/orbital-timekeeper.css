@@ -6,7 +6,7 @@
 
 .main-area {
     background-color: #F0F0E1;
-    height:1000px;
+    min-height:1000px;
 }
 
 .darkprimary {
@@ -37,3 +37,9 @@
     border-color: #B6B6B6;
 }
 
+.testdiv {
+    background-color:  red;
+}
+.testdiv2 {
+    background-color:  blue;
+}

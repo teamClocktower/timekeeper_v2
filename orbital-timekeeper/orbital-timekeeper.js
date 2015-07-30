@@ -146,7 +146,12 @@ if (Meteor.isClient) {
                         for (var els=0; els<container.length; els++){
 
                             //final += container[els];
-                            final += "1";
+                            if(container[els] != ""){
+                                final += '<span class="testdiv">&nbsp;</span>';
+                            } else {
+                                final += '<span>&nbsp;</span>';
+                            }
+
 
                         }
                         final += '</td>';
@@ -156,7 +161,8 @@ if (Meteor.isClient) {
                     final += '</tr>';
                 }
             }
-            console.log(final);
+            final += '</table>';
+
             return final;
         },
         'parseUrl' : function(){
