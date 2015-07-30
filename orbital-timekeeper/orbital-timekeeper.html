@@ -1,25 +1,3 @@
-<head>
-  <title>orbital-timekeeper</title>
-</head>
-
-<body>
-  {{> header}}
-
-  <div class="container">
-      <div class="row">
-          <div class="col s2">&nbsp;</div>
-            <div class="col s8 main-area">
-        {{>landing}}
-
-            </div>
-          <div class="col s2">&nbsp;</div>
-      </div>
-  </div>
-
-
-
-
-</body>
 
 
 
@@ -33,21 +11,26 @@
                     <div class="col s5">
                         <h4> Timekeeper</h4>
                     </div>
-                    {{#if loggedInStatus}}
-                    {{> loginMenu}}
-                    {{> loggedIn}}}
-                    {{/if}}
-
+                    <div class="col s4">&nbsp;</div>
+                    <div class="col s3">
+                        <h5>Login</h5>
+                    </div>
                 </div>
+            </div>
+            <div class="col s2">&nbsp;</div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col s2">&nbsp;</div>
+            <div class="col s8 main-area center-align">
+                <br><br><br><br>
 
-
-
+                {{> yield}}
 
             </div>
             <div class="col s2">&nbsp;</div>
-
         </div>
-
     </div>
 </template>
 
@@ -65,18 +48,7 @@
     </ul><div class="col s4" ><h4><a class="dropdown-button" href="#!" data-activates="dropdown1" style="color:white;">Login<i class="material-icons right"></i></a></h4></div>
 </template>
 
-<template name="loggedIn">
-    <div style="background-color: #727272;"><p>Hello!</p></div>
-</template>
-
 <template name="landing">
-
-
-    <div class="container">
-        <div class="row">
-            <div class="col s2">&nbsp;</div>
-            <div class="col s8 main-area center-align">
-                <br><br><br><br>
 
                 <h4>Easily match your schedules</h4>
 
@@ -86,23 +58,19 @@
 
                 <br><br><br>
 
-                <a class="waves-effect waves-orange btn orange darken-2">Begin</a>
+                <a class="waves-effect waves-orange btn orange darken-2 begin">Begin</a>
 
-
-            </div>
-            <div class="col s2">&nbsp;</div>
-        </div>
-    </div>
 </template>
 
-<template name="details">
-    <div class="container">
-        {{>step_1}}
-            <br>
-        {{>step_2}}
-            <br>
-        {{>details_button}}
-    </div>
+<template name="startup">
+
+                <div class="container">
+                    {{>step_1}}
+                    <br>
+                    {{>step_2}}
+                    <br>
+                    {{>details_button}}
+                </div>
 
 </template>
 
@@ -125,7 +93,7 @@
                 <div class="col s1">&nbsp;</div>
                 <div class="input-field col s10">
                     <input placeholder="https://nusmods.com/timetable/2015-2016/sem1?ACC3601[SEC]=A2&ACC3603[SEC]=C1&ACC3612[SEC]=F3&AR3151=&AR4001[LEC]=1&ACC4612E[SEC]=E1" id="input_url" type="text" class="validate">
-                    <label for="input_url">NUSMods URL</label>
+                    <label class="active" for="input_url">NUSMods URL</label>
                 </div>
                 <div class="col s1">&nbsp;</div>
             </div>
@@ -155,7 +123,7 @@
                 <div class="col s1">&nbsp;</div>
                 <div class="input-field col s10">
                     <input placeholder="E.g timekeeper@gmail.com" id="input_email" type="text" class="validate">
-                    <label for="input_email">Email</label>
+                    <label class="active" for="input_email">Email</label>
                 </div>
                 <div class="col s1">&nbsp;</div>
             </div>
@@ -167,22 +135,12 @@
 
 <template name="details_button">
 <div class="row right-align">
-    <a class="waves-effect waves-orange btn" style="background-color:#4B4D52;color:#E19F6B;">Next</a>
+    <a class="waves-effect waves-orange btn next" style="background-color:#4B4D52;color:#E19F6B;">Next</a>
 
 </div>
 
 </template>
 
-
-<template name="main">
-    <br>
-    <div class="container">
-    <div class="row right-align">
-        <a class="waves-effect waves-orange btn" style="background-color:#D0CABF;color:#4B4C52;">Options</a>
-    </div></div>
-
-
-</template>
 
 <template name="step_3">
     <br>
@@ -203,7 +161,7 @@
         <div class="col s1">&nbsp;</div>
         <div class="input-field col s10">
             <input placeholder="E.g CS1231 project group" id="schedule_name" type="text" class="validate">
-            <label for="schedule_name">Email</label>
+            <label class="active" for="schedule_name">Email</label>
         </div>
         <div class="col s1">&nbsp;</div>
     </div>
@@ -230,10 +188,34 @@
         <div class="col s1">&nbsp;</div>
         <div class="input-field col s10">
             <input placeholder="E.g timekeeper@gmail.com" id="share_emails" type="text" class="validate">
-            <label for="share_emails">Friends' emails</label>
+            <label class="active" for="share_emails">Friends' emails</label>
         </div>
         <div class="col s1">&nbsp;</div>
     </div>
 
+
+</template>
+
+<template name="options">
+    <div class="container">
+        <div class="row right-align">
+            <a class="waves-effect waves-orange btn options" style="background-color:#4B4D52;color:#E19F6B;">Options</a>
+        </div>
+    </div>
+</template>
+
+<template name="classTable">
+
+    {{unloggedIds}}
+    {{{testhelper}}}
+
+
+</template>
+
+<template name="timetable">
+    {{> options}}
+    {{> classTable}}
+    {{> step_3}}
+    {{> step_4}}
 
 </template>
