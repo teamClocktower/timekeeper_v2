@@ -225,6 +225,7 @@ if (Meteor.isClient) {
             var hrArr = ["08", "09", "10", "11","12","13","14","15","16","17","18","19","20","21","22","23"];
             var minArr = ["00","30"];
 
+
             var final = '<table id="timetable" class="striped"><thead style="font-size:small;"><tr><th></th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr></thead>';
             //console.log(this);
             var tdata = this.tdata;
@@ -243,7 +244,10 @@ if (Meteor.isClient) {
 
                             //final += container[els];
                             if(container[els] != ""){
-                                final += '<span class="testdiv">&nbsp;</span><span>&nbsp;</span>';
+
+                                final += '<span class="color';
+                                final += String(els);
+                                final += '">&nbsp;</span><span>&nbsp;</span>';
                             } else {
                                 final += '<span>&nbsp;</span>';
                             }
@@ -258,7 +262,7 @@ if (Meteor.isClient) {
                 }
             }
             final += '</table>';
-
+            console.log(final);
             return final;
         },
         'test' : function(){

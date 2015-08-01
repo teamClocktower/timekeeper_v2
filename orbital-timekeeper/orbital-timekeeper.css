@@ -37,9 +37,27 @@
     border-color: #B6B6B6;
 }
 
-.testdiv {
-    background-color:  red;
+.color0 {
+    background-color: #f9ad81;
 }
-.testdiv2 {
-    background-color:  blue;
+.color1 {
+    background-color: #fff79a;
+}
+.color2 {
+    background-color: #a2d39c;
+}
+.color3 {
+    background-color: #7bcdc8;
+}
+.color4 {
+    background-color: #7ea7d8;
+}
+.color5 {
+    background-color: #8882be;
+}
+.color6 {
+    background-color: #bc8dbf;
+}
+.color7 {
+    background-color: #f6989d;
 }
