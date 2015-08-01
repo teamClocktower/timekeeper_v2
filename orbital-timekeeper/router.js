@@ -4,8 +4,21 @@ Router.route('/', {
 });
 
 Router.route('/startup', {
-    name: 'startup',
-    template: 'startup'
+    name: 'startup_new',
+    template: 'startup_new',
+    data:function(){
+
+    }
+});
+
+
+Router.route('/startup/:_id', {
+    name: 'startup_add',
+    template: 'startup_add',
+    data:function(){
+        var instanceId = this.params._id;
+        return Instance.findOne({_id:instanceId});
+    }
 });
 
 Router.route('/timetable/:_id', {

@@ -62,7 +62,7 @@
 
 </template>
 
-<template name="startup">
+<template name="startup_new">
 
                 <div class="container">
                     {{>step_1}}
@@ -71,6 +71,18 @@
                     <br>
                     {{>details_button}}
                 </div>
+
+</template>
+
+<template name="startup_add">
+
+    <div class="container">
+        {{>step_1}}
+        <br>
+        {{>step_2}}
+        <br>
+        {{>details_button}}
+    </div>
 
 </template>
 
@@ -199,15 +211,38 @@
 <template name="options">
     <div class="container">
         <div class="row right-align">
-            <a class="waves-effect waves-orange btn options" style="background-color:#4B4D52;color:#E19F6B;">Options</a>
+            <a  data-target="options_modal" class="waves-effect waves-orange btn options modal-trigger" style="background-color:#4B4D52;color:#E19F6B;">Share</a>
+        </div>
+    </div>
+</template>
+
+<template name="options_modal">
+    <div id="options_modal" class="modal">
+        <div class="modal-content">
+            <h4>Share *insert name* with your friends!</h4>
+            <div class="input-field col s10">
+                <input placeholder="CS1231 Project group" id="instance_name" type="text" class="validate">
+                <label class="active" for="schedule_name">*INSERTNAME*'s Name</label>
+            </div>
+            <div class="input-field col s10">
+                <input placeholder="To coordinate project meetings" id="instance_description" type="text" class="validate">
+                <label class="active" for="schedule_name">Description</label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <a  class="waves-effect waves-orange btn share modal-trigger" style="background-color:#4B4D52;color:#E19F6B;">Share</a>
         </div>
     </div>
 </template>
 
 <template name="classTable">
 
-    {{unloggedIds}}
-    {{{testhelper}}}
+    {{#each unloggedIds}}
+        {{test}}
+        <br>
+        {{/each}}
+    {{{timetableview}}}
+    {{> options_modal}}
 
 
 </template>
@@ -215,7 +250,6 @@
 <template name="timetable">
     {{> options}}
     {{> classTable}}
-    {{> step_3}}
-    {{> step_4}}
+
 
 </template>
