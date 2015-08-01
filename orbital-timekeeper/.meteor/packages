@@ -11,5 +11,12 @@ materialize:materialize
 accounts-password
 accounts-ui
 iron:router
-themeteorchef:jquery-validation
 jquery
+email
+
+
+
+meteorhacks:npm
+
+
+npm-container

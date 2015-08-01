@@ -5,10 +5,7 @@ Router.route('/', {
 
 Router.route('/startup', {
     name: 'startup_new',
-    template: 'startup_new',
-    data:function(){
-
-    }
+    template: 'startup_new'
 });
 
 

@@ -1,6 +1,7 @@
-AccountLogged = new Meteor.Collection('accountlogged');
-AccountUnlogged = new Meteor.Collection('accountunlogged');
+
+AccountDetails = new Meteor.Collection('accountdetails');
 Instance = new Meteor.Collection('instance');
+//UserAccounts = new Mongo.Collection('users');
 
 if (Meteor.isClient) {
   // counter starts at 0
@@ -13,207 +14,241 @@ if (Meteor.isClient) {
       }
   });
 
+    Template.header.events({
+        'click .login' : function(){
+            $('#login_modal').openModal();
+        }
+    });
+
+    Template.startup_add.helpers({
+       'formsInit' : function(){
+           $("#input_url").validate();
+           $("#input_email").validate();
+       }
+    });
+
+
     Template.startup_add.events({
        'click .next' : function(){
+           var validatePassed = true;
+           var urlLongValidation = /nusmods.com\/timetable/;
+           var urlShortValidation = /modsn.us/;
+           var emailValidation = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
            var url = $('#input_url').val();
            var email = $('#input_email').val();
-           var user;
 
-           var accId = AccountUnlogged.insert({
-               name: '',
-               url: url,
-               email: email
-           }, function(error, results){
-               user = results;
-           });
-           var unloggedIds = this.unloggedIds;
-           unloggedIds.push(accId);
-           Instance.update(this._id, {$set : {unloggedIds: unloggedIds}});
-           Session.set('InstanceId', this._id);
-
-
-           var path = 'http://api.nusmods.com/';
-           var dayArr = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-           $.ajaxSetup({
-               async: false
-           });
-
-
-           var decoded;
-           var tdata = Instance.findOne({_id : Session.get('InstanceId')}).tdata;
-           if(url.length == 21){
-               $.getJSON('https://nusmods.com/redirect.php?timetable=' + url , function(json){
-                   decoded = decodeURIComponent(json.redirectedUrl);
-               });
-           } else{
-               decoded = decodeURIComponent(url);
+           if (!urlLongValidation.test(url) || !urlShortValidation.test(url)) {
+               Materialize.toast('URL invalid', 4000);
+               validatePassed = false;
            }
 
-           var split = decoded.split('/');
-           var year = split[split.length-2];
-           var last = split.pop();
-           var sem = last[3];
-           var sessions = last.split('?')[1].split('&');
+           if (!emailValidation.test(email)){
+               Materialize.toast('Email invalid', 4000);
+               validatePassed = false;
+           }
+           if (validatePassed) {
+               var user;
+
+               var accId = AccountDetails.insert({
+                   name: '',
+                   url: url,
+                   email: email
+               }, function (error, results) {
+                   user = results;
+               });
+               var unloggedIds = this.unloggedIds;
+               unloggedIds.push(accId);
+               Instance.update(this._id, {$set: {unloggedIds: unloggedIds}});
+               Session.set('InstanceId', this._id);
 
 
+               var path = 'http://api.nusmods.com/';
+               var dayArr = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+               $.ajaxSetup({
+                   async: false
+               });
 
-           sessions.forEach(function(session){
-               var modId = session.split('[')[0];
-               var classType = session.slice(session.indexOf('[') + 1, session.indexOf(']')).toLowerCase();
-               var classSlot = session.split('=').pop();
 
-               $.getJSON(path + year + '/' + sem + '/modules/' + modId + '/timetable.json', function(json){
+               var decoded;
+               var tdata = Instance.findOne({_id: Session.get('InstanceId')}).tdata;
+               if (url.length == 21) {
+                   $.getJSON('https://nusmods.com/redirect.php?timetable=' + url, function (json) {
+                       decoded = decodeURIComponent(json.redirectedUrl);
+                   });
+               } else {
+                   decoded = decodeURIComponent(url);
+               }
 
-                   json.forEach(function(lesson){
-                       if(lesson.ClassNo == classSlot && lesson.LessonType.toLowerCase().slice(0,3) == classType ){
+               var split = decoded.split('/');
+               var year = split[split.length - 2];
+               var last = split.pop();
+               var sem = last[3];
+               var sessions = last.split('?')[1].split('&');
 
-                           var hs = parseInt(lesson.StartTime.slice(0,2));
-                           var ms = parseInt(lesson.StartTime.slice(2,4))==0?0:0.5;
-                           var he = parseInt(lesson.EndTime.slice(0,2));
-                           var me = parseInt(lesson.EndTime.slice(2,4));
-                           var day = lesson.DayText;
-                           var dayIdx = dayArr.indexOf(day);
 
-                           //console.log(classSlot, classType, modId);
-                           for (var i =((hs+ms)*2)-16; i<((he+me)*2)-16; i++){
-                               tdata[i][dayIdx].push(user);
-                               //console.log(dayIdx, i);
+               sessions.forEach(function (session) {
+                   var modId = session.split('[')[0];
+                   var classType = session.slice(session.indexOf('[') + 1, session.indexOf(']')).toLowerCase();
+                   var classSlot = session.split('=').pop();
+
+                   $.getJSON(path + year + '/' + sem + '/modules/' + modId + '/timetable.json', function (json) {
+
+                       json.forEach(function (lesson) {
+                           if (lesson.ClassNo == classSlot && lesson.LessonType.toLowerCase().slice(0, 3) == classType) {
+
+                               var hs = parseInt(lesson.StartTime.slice(0, 2));
+                               var ms = parseInt(lesson.StartTime.slice(2, 4)) == 0 ? 0 : 0.5;
+                               var he = parseInt(lesson.EndTime.slice(0, 2));
+                               var me = parseInt(lesson.EndTime.slice(2, 4));
+                               var day = lesson.DayText;
+                               var dayIdx = dayArr.indexOf(day);
+
+                               //console.log(classSlot, classType, modId);
+                               for (var i = ((hs + ms) * 2) - 16; i < ((he + me) * 2) - 16; i++) {
+                                   tdata[i][dayIdx].push(user);
+                                   //console.log(dayIdx, i);
+
+                               }
+
 
                            }
+                       }); // end json.forEach
 
 
-                       }
-                   }); // end json.forEach
+                   }); // end getJSON
+
+               }); // end sessions.forEach
+
+               // endless loop update, why?
+
+               var sessId = Session.get('InstanceId');
+               Instance.update(sessId, {$set: {tdata: tdata}});
 
 
-
-               }); // end getJSON
-
-           }); // end sessions.forEach
-
-           // endless loop update, why?
-
-           var sessId = Session.get('InstanceId');
-           Instance.update(sessId, {$set : {tdata: tdata}});
+               $.ajaxSetup({
+                   async: true
+               });
 
 
-
-
-           $.ajaxSetup({
-               async: true
-           });
-
-
-           Router.go('timetable', {_id: this._id});
-
+               Router.go('timetable', {_id: this._id});
+           }
        }
     });
 
 
     Template.startup_new.events({
         'click .next' : function(){
+            var validatePassed = true;
+            var urlLongValidation = /nusmods.com\/timetable/;
+            var urlShortValidation = /modsn.us/;
+            var emailValidation = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
             var url = $('#input_url').val();
             var email = $('#input_email').val();
-            var user;
-            var accId = AccountUnlogged.insert({
-               name: '',
-                url: url,
-                email: email
-            }, function(error, results){
-                user = results;
-            });
 
-            Instance.insert({
-                name: '',
-                unloggedIds: [accId],
-                //  Half hr block represented[ [],[],[],[],[] ] , each element is a day
-                tdata : [[[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]], [[],[],[],[],[]]]
+            if (!urlLongValidation.test(url) || !urlShortValidation.test(url)) {
+                Materialize.toast('URL invalid', 4000);
+                validatePassed = false;
+            }
 
-            }, function(error, results){
-
-                var url = $('#input_url').val();
-
-                Session.set('InstanceId', results);
-
-                var path = 'http://api.nusmods.com/';
-                var dayArr = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-                $.ajaxSetup({
-                    async: false
+            if (!emailValidation.test(email)){
+                Materialize.toast('Email invalid', 4000);
+                validatePassed = false;
+            }
+            if (validatePassed) {
+                var user;
+                var accId = AccountDetails.insert({
+                    name: '',
+                    url: url,
+                    email: email
+                }, function (error, results) {
+                    user = results;
                 });
 
+                Instance.insert({
+                    name: '',
+                    unloggedIds: [accId],
+                    //  Half hr block represented[ [],[],[],[],[] ] , each element is a day
+                    tdata: [[[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []]]
 
-                var decoded;
-                var tdata = Instance.findOne({_id : Session.get('InstanceId')}).tdata;
-                if(url.length == 21){
-                    $.getJSON('https://nusmods.com/redirect.php?timetable=' + url , function(json){
-                        decoded = decodeURIComponent(json.redirectedUrl);
+                }, function (error, results) {
+
+                    var url = $('#input_url').val();
+
+                    Session.set('InstanceId', results);
+
+                    var path = 'http://api.nusmods.com/';
+                    var dayArr = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+                    $.ajaxSetup({
+                        async: false
                     });
-                } else{
-                    decoded = decodeURIComponent(url);
-                }
-
-                var split = decoded.split('/');
-                var year = split[split.length-2];
-                var last = split.pop();
-                var sem = last[3];
-                var sessions = last.split('?')[1].split('&');
 
 
+                    var decoded;
+                    var tdata = Instance.findOne({_id: Session.get('InstanceId')}).tdata;
+                    if (url.length == 21) {
+                        $.getJSON('https://nusmods.com/redirect.php?timetable=' + url, function (json) {
+                            decoded = decodeURIComponent(json.redirectedUrl);
+                        });
+                    } else {
+                        decoded = decodeURIComponent(url);
+                    }
 
-                sessions.forEach(function(session){
-                    var modId = session.split('[')[0];
-                    var classType = session.slice(session.indexOf('[') + 1, session.indexOf(']')).toLowerCase();
-                    var classSlot = session.split('=').pop();
+                    var split = decoded.split('/');
+                    var year = split[split.length - 2];
+                    var last = split.pop();
+                    var sem = last[3];
+                    var sessions = last.split('?')[1].split('&');
 
-                    $.getJSON(path + year + '/' + sem + '/modules/' + modId + '/timetable.json', function(json){
 
-                        json.forEach(function(lesson){
-                            if(lesson.ClassNo == classSlot && lesson.LessonType.toLowerCase().slice(0,3) == classType ){
+                    sessions.forEach(function (session) {
+                        var modId = session.split('[')[0];
+                        var classType = session.slice(session.indexOf('[') + 1, session.indexOf(']')).toLowerCase();
+                        var classSlot = session.split('=').pop();
 
-                                var hs = parseInt(lesson.StartTime.slice(0,2));
-                                var ms = parseInt(lesson.StartTime.slice(2,4))==0?0:0.5;
-                                var he = parseInt(lesson.EndTime.slice(0,2));
-                                var me = parseInt(lesson.EndTime.slice(2,4));
-                                var day = lesson.DayText;
-                                var dayIdx = dayArr.indexOf(day);
+                        $.getJSON(path + year + '/' + sem + '/modules/' + modId + '/timetable.json', function (json) {
 
-                                //console.log(classSlot, classType, modId);
-                                for (var i =((hs+ms)*2)-16; i<((he+me)*2)-16; i++){
-                                    tdata[i][dayIdx].push(user);
-                                    //console.log(dayIdx, i);
+                            json.forEach(function (lesson) {
+                                if (lesson.ClassNo == classSlot && lesson.LessonType.toLowerCase().slice(0, 3) == classType) {
+
+                                    var hs = parseInt(lesson.StartTime.slice(0, 2));
+                                    var ms = parseInt(lesson.StartTime.slice(2, 4)) == 0 ? 0 : 0.5;
+                                    var he = parseInt(lesson.EndTime.slice(0, 2));
+                                    var me = parseInt(lesson.EndTime.slice(2, 4));
+                                    var day = lesson.DayText;
+                                    var dayIdx = dayArr.indexOf(day);
+
+                                    //console.log(classSlot, classType, modId);
+                                    for (var i = ((hs + ms) * 2) - 16; i < ((he + me) * 2) - 16; i++) {
+                                        tdata[i][dayIdx].push(user);
+                                        //console.log(dayIdx, i);
+
+                                    }
+
 
                                 }
+                            }); // end json.forEach
 
 
-                            }
-                        }); // end json.forEach
+                        }); // end getJSON
+
+                    }); // end sessions.forEach
+
+                    // endless loop update, why?
+
+                    var sessId = Session.get('InstanceId');
+                    Instance.update(sessId, {$set: {tdata: tdata}});
 
 
-
-                    }); // end getJSON
-
-                }); // end sessions.forEach
-
-                // endless loop update, why?
-
-                var sessId = Session.get('InstanceId');
-                Instance.update(sessId, {$set : {tdata: tdata}});
+                    $.ajaxSetup({
+                        async: true
+                    });
 
 
+                    Router.go('timetable', {_id: results});
 
 
-                $.ajaxSetup({
-                    async: true
                 });
-
-
-
-
-
-                Router.go('timetable', {_id: results});
-
-
-            });
+            }
 
         }
     });
@@ -262,18 +297,20 @@ if (Meteor.isClient) {
                 }
             }
             final += '</table>';
-            console.log(final);
+            //console.log(final);
             return final;
         },
-        'test' : function(){
-            //console.log(String(this));
-            var user = AccountUnlogged.findOne({_id:String(this)});
+        'legend' : function(unloggedIds){
             var final = "";
-            //console.log(user);
-            final+= user.email;
-            final += '                             ';
-            final += "PLACEHOLDER COLOR";
-            //console.log(final);
+            for (var idx=0; idx<unloggedIds.length; idx++){
+                var user = AccountDetails.findOne({_id:String(unloggedIds[idx])});
+                final += '<div>';
+                //console.log(user);
+                final += '<div style="width:500px;" class="color'+String(idx)+'">'+user.email+'</div>';
+                //console.log(final);
+            }
+            final += '</div>';
+
             return final;
 
 
@@ -294,6 +331,8 @@ if (Meteor.isClient) {
 
 if (Meteor.isServer) {
   Meteor.startup(function () {
+      process.env.MAIL_URL="smtp://noreply.timekeeper@gmail.com:PASSWORD@smtp.gmail.com:465/";
+
 
     // code to run on server at startup
   });

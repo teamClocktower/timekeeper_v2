@@ -7,13 +7,18 @@
         <div class="row" style="margin-bottom:0 !important;">
             <div class="col s2">&nbsp;</div>
             <div class="col s8 header">
-                <div class="row">
+                <div class="row valign-wrapper">
                     <div class="col s5">
                         <h4> Timekeeper</h4>
                     </div>
                     <div class="col s4">&nbsp;</div>
-                    <div class="col s3">
-                        <h5>Login</h5>
+                    <div class="col s3 valign-wrapper">
+
+                        <!-- once social logins added
+                        {{> loginMenuBtn}}
+                        {{> loginMenu}} -->
+                        {{> loginButtons}}
+
                     </div>
                 </div>
             </div>
@@ -34,19 +39,35 @@
     </div>
 </template>
 
-<template name="loginMenu">
-    <!--to run if havent login-->
-    <div class="col s3">&nbsp;</div>
-    <ul id="dropdown1" class="dropdown-content">
-        <li><a href="#!">Google Login</a></li>
-        <li class="divider"></li>
-        <li><a href="#!">Facebook Login</a></li>
-        <li class="divider"></li>
-        <li><a href="#!">Nus Login</a></li>
-        <li class="divider"></li>
-        <li><a href="#!">{{> loginButtons}}</a></li>
-    </ul><div class="col s4" ><h4><a class="dropdown-button" href="#!" data-activates="dropdown1" style="color:white;">Login<i class="material-icons right"></i></a></h4></div>
+<template name="loginMenuBtn">
+    <div class="container">
+        <div class="row right-align">
+            <a  data-target="login_modal" class="waves-effect waves-orange btn login modal-trigger" style="background-color:#4B4D52;color:#E19F6B;">Login</a>
+        </div>
+    </div>
 </template>
+
+<template name="loginMenu">
+    <div id="login_modal" class="modal">
+        <div class="modal-content">
+            <h4 style="color:orangered;">Login</h4>
+            <div class="col s3">&nbsp;</div>
+            <ul>
+                <li>&nbsp;</li>
+                <li><a href="#!">Google Login</a></li>
+
+                <li><a href="#!">Facebook Login</a></li>
+
+                <li><a href="#!">Nus Login</a></li>
+
+                <li><a href="#!">{{> loginButtons}}</a></li>
+            </ul><div class="col s4" >&nbsp;</div>
+        </div>
+
+    </div>
+</template>
+
+
 
 <template name="landing">
 
@@ -82,6 +103,7 @@
         {{>step_2}}
         <br>
         {{>details_button}}
+        {{formsInit}}
     </div>
 
 </template>
@@ -134,7 +156,7 @@
             <div class="row center-align">
                 <div class="col s1">&nbsp;</div>
                 <div class="input-field col s10">
-                    <input placeholder="E.g timekeeper@gmail.com" id="input_email" type="text" class="validate">
+                    <input placeholder="E.g timekeeper@gmail.com" id="input_email" type="email" class="validate">
                     <label class="active" for="input_email">Email</label>
                 </div>
                 <div class="col s1">&nbsp;</div>
@@ -228,6 +250,10 @@
                 <input placeholder="To coordinate project meetings" id="instance_description" type="text" class="validate">
                 <label class="active" for="schedule_name">Description</label>
             </div>
+            <div class="input-field col s10">
+                <input placeholder="" id="instance_description" type="text" class="validate">
+                <label class="active" for="schedule_emails">Friends' emails</label>
+            </div>
         </div>
         <div class="modal-footer">
             <a  class="waves-effect waves-orange btn share modal-trigger" style="background-color:#4B4D52;color:#E19F6B;">Share</a>
@@ -237,10 +263,7 @@
 
 <template name="classTable">
 
-    {{#each unloggedIds}}
-        {{test}}
-        <br>
-        {{/each}}
+    {{{legend unloggedIds}}}
     {{{timetableview}}}
     {{> options_modal}}
 
