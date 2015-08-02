@@ -3,6 +3,9 @@ AccountDetails = new Meteor.Collection('accountdetails');
 Instance = new Meteor.Collection('instance');
 //UserAccounts = new Mongo.Collection('users');
 
+
+
+
 if (Meteor.isClient) {
   // counter starts at 0
 
@@ -17,16 +20,60 @@ if (Meteor.isClient) {
     Template.header.events({
         'click .login' : function(){
             $('#login_modal').openModal();
+        },
+        'click .logout' : function(){
+            Meteor.logout();
         }
     });
 
-    Template.startup_add.helpers({
-       'formsInit' : function(){
-           $("#input_url").validate();
-           $("#input_email").validate();
-       }
+    Template.header.helpers({
+       'displayUser' : function(){
+           var t = Meteor.user().emails;
+
+           return t[0].address;
+       },
+        'onLogin' : function(){
+            Accounts.onLogin(function(){
+               console.log("logged in");
+            });
+
+        }
     });
 
+    Template.startup_add.onRendered( function(){
+
+
+
+        if (Meteor.user()) {
+            var userDetails = AccountDetails.findOne({createdBy: Meteor.userId()});
+            if (userDetails) {
+                accId = userDetails._id;
+                $('#input_url').val(userDetails.url);
+                $('#input_email').val(userDetails.email);
+
+            }
+        }
+
+
+
+    });
+
+    Template.startup_add.helpers({
+        'populateFields' : function(){
+            $(document).ready(function(){
+
+                if (Meteor.user()) {
+                    var userDetails = AccountDetails.findOne({createdBy: Meteor.userId()});
+                    if (userDetails) {
+                        accId = userDetails._id;
+                        $('#input_url').val(userDetails.url);
+                        $('#input_email').val(userDetails.email);
+
+                    }
+                }
+            });
+        }
+    });
 
     Template.startup_add.events({
        'click .next' : function(){
@@ -37,7 +84,7 @@ if (Meteor.isClient) {
            var url = $('#input_url').val();
            var email = $('#input_email').val();
 
-           if (!urlLongValidation.test(url) || !urlShortValidation.test(url)) {
+           if (!urlLongValidation.test(url) && !urlShortValidation.test(url)) {
                Materialize.toast('URL invalid', 4000);
                validatePassed = false;
            }
@@ -47,15 +94,32 @@ if (Meteor.isClient) {
                validatePassed = false;
            }
            if (validatePassed) {
-               var user;
 
-               var accId = AccountDetails.insert({
-                   name: '',
-                   url: url,
-                   email: email
-               }, function (error, results) {
-                   user = results;
-               });
+               var accId;
+               if (Meteor.user()){
+                   var userDetails = AccountDetails.findOne({createdBy:Meteor.userId()});
+                   if (userDetails){
+                       accId = userDetails._id;
+                   } else{
+                       accId = AccountDetails.insert({
+                           name: '',
+                           url: url,
+                           email: email,
+                           instances:  [],
+                           createdBy: Meteor.userId()
+                       });
+                   }
+               }else{
+                   accId = AccountDetails.insert({
+                       name: '',
+                       url: url,
+                       email: email,
+                       instances:  []
+                   });
+               }
+               var user = accId;
+
+
                var unloggedIds = this.unloggedIds;
                unloggedIds.push(accId);
                Instance.update(this._id, {$set: {unloggedIds: unloggedIds}});
@@ -135,6 +199,41 @@ if (Meteor.isClient) {
        }
     });
 
+    Template.startup_new.onRendered( function(){
+
+
+        console.log(Meteor.user());
+        if (Meteor.user()) {
+            var userDetails = AccountDetails.findOne({createdBy: Meteor.userId()});
+            if (userDetails) {
+                accId = userDetails._id;
+                $('#input_url').val(userDetails.url);
+                $('#input_email').val(userDetails.email);
+
+            }
+        }
+
+
+
+    });
+
+    Template.startup_new.helpers({
+        'populateFields' : function(){
+            $(document).ready(function(){
+
+                if (Meteor.user()) {
+                    var userDetails = AccountDetails.findOne({createdBy: Meteor.userId()});
+                    if (userDetails) {
+                        accId = userDetails._id;
+                        $('#input_url').val(userDetails.url);
+                        $('#input_email').val(userDetails.email);
+
+                    }
+                }
+            });
+
+        }
+    });
 
     Template.startup_new.events({
         'click .next' : function(){
@@ -145,7 +244,8 @@ if (Meteor.isClient) {
             var url = $('#input_url').val();
             var email = $('#input_email').val();
 
-            if (!urlLongValidation.test(url) || !urlShortValidation.test(url)) {
+
+            if (!urlLongValidation.test(url) && !urlShortValidation.test(url)) {
                 Materialize.toast('URL invalid', 4000);
                 validatePassed = false;
             }
@@ -154,24 +254,45 @@ if (Meteor.isClient) {
                 Materialize.toast('Email invalid', 4000);
                 validatePassed = false;
             }
+
             if (validatePassed) {
-                var user;
-                var accId = AccountDetails.insert({
-                    name: '',
-                    url: url,
-                    email: email
-                }, function (error, results) {
-                    user = results;
-                });
+
+                var accId;
+                if (Meteor.user()){
+                    var userDetails = AccountDetails.findOne({createdBy:Meteor.userId()});
+                    if (userDetails){
+                        accId = userDetails._id;
+                    } else{
+                        accId = AccountDetails.insert({
+                            name: '',
+                            url: url,
+                            email: email,
+                            instances:  [],
+                            createdBy: Meteor.userId()
+                        });
+                    }
+                }else{
+                    accId = AccountDetails.insert({
+                        name: '',
+                        url: url,
+                        email: email,
+                        instances:  []
+                    });
+                }
+
 
                 Instance.insert({
-                    name: '',
+                    name: 'Un-Named Instance',
                     unloggedIds: [accId],
                     //  Half hr block represented[ [],[],[],[],[] ] , each element is a day
                     tdata: [[[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []]]
 
                 }, function (error, results) {
 
+                    var userInstances = AccountDetails.findOne({_id:accId}).instances;
+                    userInstances.push(results);
+
+                    AccountDetails.update(accId, {$set: {instances: userInstances}});
                     var url = $('#input_url').val();
 
                     Session.set('InstanceId', results);
@@ -219,7 +340,7 @@ if (Meteor.isClient) {
 
                                     //console.log(classSlot, classType, modId);
                                     for (var i = ((hs + ms) * 2) - 16; i < ((he + me) * 2) - 16; i++) {
-                                        tdata[i][dayIdx].push(user);
+                                        tdata[i][dayIdx].push(accId);
                                         //console.log(dayIdx, i);
 
                                     }
@@ -236,6 +357,7 @@ if (Meteor.isClient) {
                     // endless loop update, why?
 
                     var sessId = Session.get('InstanceId');
+
                     Instance.update(sessId, {$set: {tdata: tdata}});
 
 
@@ -320,7 +442,38 @@ if (Meteor.isClient) {
     Template.timetable.events({
         'click .options' : function(){
             $('#options_modal').openModal();
+        },
+        'click .share' : function(){
+            var emailValidation = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+
+
+
+            var instanceName = $('#instance_name').val();
+            var instanceDesc = $('#instance_description').val();
+            var instanceEmail = $('#instance_email').val();
+
+
+            var emailUserTemplate = 'Hi,\n You have recently created a new *INSERTNAME* at http://orbitaltimekeeper.meteor.com/timetable/' + this._id + ' . Please visit the link to access your *INSERTNAME*. \n\n Your friends have been sent their invitations too! You will be able to view their timetables once they have added theirs in.';
+
+            var emailShareTemplate = 'Hi, \n You have recently been invited to join *INSERTUSEREMAIL*\'s *INSERTNAME*.\n\n Reason:'+instanceName+'\n\nDescription: '+instanceDesc+ ' \n\n Join us at http://orbitaltimekeeper.meteor.com/timetable/' + this._id +' !';
+
+           // FOR SHARER Meteor.call('sendEmail', )
+            Meteor.call('sendEmail',  instanceEmail, 'noreply.timekeeper@gmail.com', instanceName, emailShareTemplate);
+
+            var instanceId = this._id;
+            Instance.update(instanceId, {$set: {name: instanceName}});
+            $('#options_modal').closeModal();
+            $('#confirmation_modal').openModal();
         }
+    });
+
+    Template.dashboard.helpers({
+       'collectionRow' : function(){
+           var instanceId = String(this);
+           var name = Instance.findOne({_id: instanceId}).name;
+
+           return name;
+       }
     });
   //Template.loggedIn.helpers({
   //    return "<h5>Welcome"+loginName+"</h5>"
@@ -330,13 +483,28 @@ if (Meteor.isClient) {
 }
 
 if (Meteor.isServer) {
+
+
+
   Meteor.startup(function () {
       process.env.MAIL_URL="smtp://noreply.timekeeper@gmail.com:PASSWORD@smtp.gmail.com:465/";
 
-
     // code to run on server at startup
-  });
 
+    });
+
+    Meteor.methods({
+       sendEmail: function(to, from, subject, text){
+           check([to, from, subject, text], [String]);
+           this.unblock();
+           Email.send({
+              to: to,
+               from: from,
+               subject: subject,
+               text: text
+           });
+       }
+    });
 
 
 

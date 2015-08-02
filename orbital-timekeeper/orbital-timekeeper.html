@@ -6,20 +6,39 @@
     <div class="container" >
         <div class="row" style="margin-bottom:0 !important;">
             <div class="col s2">&nbsp;</div>
-            <div class="col s8 header">
+            <div class="col s8 header primarytext">
                 <div class="row valign-wrapper">
                     <div class="col s5">
-                        <h4> Timekeeper</h4>
+                        <a href="{{pathFor route='landing'}}"><h4> Timekeeper</h4></a>
                     </div>
-                    <div class="col s4">&nbsp;</div>
-                    <div class="col s3 valign-wrapper">
+
 
                         <!-- once social logins added
                         {{> loginMenuBtn}}
                         {{> loginMenu}} -->
-                        {{> loginButtons}}
+                        {{#if currentUser}}
+                            <div class="col s2">&nbsp;</div>
+                            <div class="col s3 valign-wrapper left-align">
+                            Welcome,<br>
+                                {{displayUser}}
+                            </div>
+                            <div class="col s2 valign-wrapper right-align">
+                            {{> logoutButton}}
+                            </div>
 
-                    </div>
+                            {{else}}
+                            <div class="col s5">&nbsp;</div>
+                            <div class="col s2 valign-wrapper">
+
+                            {{> loginButtons}}
+                            </div>
+
+
+                        {{/if}}
+
+                        {{onLogin}}
+
+
                 </div>
             </div>
             <div class="col s2">&nbsp;</div>
@@ -37,6 +56,10 @@
             <div class="col s2">&nbsp;</div>
         </div>
     </div>
+</template>
+
+<template name="logoutButton">
+    <a class="waves-effect waves-teal btn-flat grey lighten-1 logout ">Logout</a>
 </template>
 
 <template name="loginMenuBtn">
@@ -85,13 +108,14 @@
 
 <template name="startup_new">
 
-                <div class="container">
-                    {{>step_1}}
-                    <br>
-                    {{>step_2}}
-                    <br>
-                    {{>details_button}}
-                </div>
+    <div class="container">
+        {{>step_1}}
+        <br>
+        {{>step_2}}
+        <br>
+        {{>details_button}}
+    </div>
+    {{populateFields}}
 
 </template>
 
@@ -105,6 +129,7 @@
         {{>details_button}}
         {{formsInit}}
     </div>
+    {{populateFields}}
 
 </template>
 
@@ -233,7 +258,7 @@
 <template name="options">
     <div class="container">
         <div class="row right-align">
-            <a  data-target="options_modal" class="waves-effect waves-orange btn options modal-trigger" style="background-color:#4B4D52;color:#E19F6B;">Share</a>
+            <a class="waves-effect waves-orange btn options modal-trigger" style="background-color:#4B4D52;color:#E19F6B;">Share</a>
         </div>
     </div>
 </template>
@@ -243,17 +268,18 @@
         <div class="modal-content">
             <h4>Share *insert name* with your friends!</h4>
             <div class="input-field col s10">
-                <input placeholder="CS1231 Project group" id="instance_name" type="text" class="validate">
-                <label class="active" for="schedule_name">*INSERTNAME*'s Name</label>
+                <input placeholder="CS1231 Project group" id="instance_name" type="text" class="validate" maxlength="30">
+                <label class="active" for="instance_name">*INSERTNAME*'s Name</label>
             </div>
             <div class="input-field col s10">
-                <input placeholder="To coordinate project meetings" id="instance_description" type="text" class="validate">
-                <label class="active" for="schedule_name">Description</label>
+                <input placeholder="To coordinate project meetings" id="instance_description" type="text" class="validate" maxlength="60">
+                <label class="active" for="instance_description">Description</label>
             </div>
             <div class="input-field col s10">
-                <input placeholder="" id="instance_description" type="text" class="validate">
-                <label class="active" for="schedule_emails">Friends' emails</label>
+                <input placeholder="groupmate1@work.com, groupmate2@morework.com ..." id="instance_email" type="text" class="validate">
+                <label class="active" for="instance_email">Friends' emails</label>
             </div>
+
         </div>
         <div class="modal-footer">
             <a  class="waves-effect waves-orange btn share modal-trigger" style="background-color:#4B4D52;color:#E19F6B;">Share</a>
@@ -261,11 +287,27 @@
     </div>
 </template>
 
+<template name="confirmation_modal">
+    <div id="confirmation_modal" class="modal">
+        <div class="modal-content">
+            <h4>Your *INSERTNAME* has been shared with your friends successfully!</h4>
+
+
+        </div>
+        <div class="modal-footer">
+            Do you have many *INSERTNAME*? Consider signing up with us to easily access all your *INSERTNAME*s!
+        </div>
+    </div>
+
+</template>
+
 <template name="classTable">
 
     {{{legend unloggedIds}}}
     {{{timetableview}}}
     {{> options_modal}}
+    {{> confirmation_modal}}
+
 
 
 </template>
@@ -273,6 +315,18 @@
 <template name="timetable">
     {{> options}}
     {{> classTable}}
+
+
+</template>
+
+<template name="dashboard">
+    <h5 class="left-align">Hi {{email}}, these are your instances:</h5>
+    <div class="collection">
+    {{#each instances}}
+
+        <a href="/timetable/{{this}}" class="collection-item">{{collectionRow}}</a>
+    {{/each}}
+    </div>
 
 
 </template>

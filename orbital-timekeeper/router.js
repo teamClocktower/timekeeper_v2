@@ -1,6 +1,7 @@
 Router.route('/', {
     name: 'landing',
     template: 'landing'
+
 });
 
 Router.route('/startup', {
@@ -27,6 +28,16 @@ Router.route('/timetable/:_id', {
     },
 
     name: 'timetable'
+});
+
+Router.route('/dashboard/:_id', {
+   name: 'dashboard',
+    template: 'dashboard',
+    data: function(){
+        var userId = this.params._id;
+
+        return AccountDetails.findOne({createdBy:userId});
+    }
 });
 
 Router.configure({
