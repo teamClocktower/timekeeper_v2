@@ -40,11 +40,14 @@ logging@1.0.7
 materialize:materialize@0.97.0
 meteor@1.1.6
 meteor-platform@1.2.2
+meteorhacks:async@1.0.0
+meteorhacks:npm@1.4.0
 minifiers@1.1.5
 minimongo@1.0.8
 mobile-status-bar@1.0.3
 mongo@1.1.0
 npm-bcrypt@0.7.8_2
+npm-container@1.1.0
 observe-sequence@1.0.6
 ordered-dict@1.0.3
 random@1.0.3
@@ -60,7 +63,6 @@ spacebars@1.0.6
 spacebars-compiler@1.0.6
 srp@1.0.3
 templating@1.1.1
-themeteorchef:jquery-validation@1.13.1
 tracker@1.0.7
 ui@1.0.6
 underscore@1.0.3
