@@ -1,12 +1,14 @@
 .header {
     background-color: #FFc649;
-    height:65px;
-    color:white
+    height:80px;
+    color:white;
+    border-radius: 15px 15px 0 0;
 }
 
 .main-area {
     background-color: #F0F0E1;
     min-height:1000px;
+    border-radius: 0 0 15px 15px;
 }
 
 .darkprimary {
@@ -38,26 +40,29 @@
 }
 
 .color0 {
-    background-color: #f9ad81;
+    background-color: #e5193c;
 }
 .color1 {
-    background-color: #fff79a;
+    background-color: #86711d;
 }
 .color2 {
-    background-color: #a2d39c;
+    background-color: #c2c222;
 }
 .color3 {
-    background-color: #7bcdc8;
+    background-color: #29a229;
 }
 .color4 {
-    background-color: #7ea7d8;
+    background-color: #1998b2;
 }
 .color5 {
-    background-color: #8882be;
+    background-color: #3d62f4;
 }
 .color6 {
-    background-color: #bc8dbf;
+    background-color: #ac2bed;
 }
 .color7 {
-    background-color: #f6989d;
+    background-color: #e519c2;
+}
+.cellWidth {
+    width:120px;
 }

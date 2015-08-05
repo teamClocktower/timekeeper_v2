@@ -1,6 +1,16 @@
 Router.route('/', {
     name: 'landing',
-    template: 'landing'
+    template: 'landing',
+    onBeforeAction : function(){
+        if (Meteor.user()){
+
+            Router.go('/dashboard/'+Meteor.userId());
+
+        } else {
+            this.next();
+        }
+    }
+
 
 });
 
@@ -37,6 +47,15 @@ Router.route('/dashboard/:_id', {
         var userId = this.params._id;
 
         return AccountDetails.findOne({createdBy:userId});
+    },
+    onBeforeAction : function() {
+        if (!Meteor.user()) {
+
+            Router.go('/');
+
+        } else {
+            this.next();
+        }
     }
 });
 

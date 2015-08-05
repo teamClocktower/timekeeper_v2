@@ -77,124 +77,130 @@ if (Meteor.isClient) {
 
     Template.startup_add.events({
        'click .next' : function(){
-           var validatePassed = true;
-           var urlLongValidation = /nusmods.com\/timetable/;
-           var urlShortValidation = /modsn.us/;
-           var emailValidation = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
-           var url = $('#input_url').val();
-           var email = $('#input_email').val();
+           if (this.unloggedIds.length > 7){
+               Materialize.toast('Too many timetables for this group', 4000);
+           } else{
+               var validatePassed = true;
+               var urlLongValidation = /nusmods.com\/timetable/;
+               var urlShortValidation = /modsn.us/;
+               var emailValidation = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
+               var url = $('#input_url').val();
+               var email = $('#input_email').val();
 
-           if (!urlLongValidation.test(url) && !urlShortValidation.test(url)) {
-               Materialize.toast('URL invalid', 4000);
-               validatePassed = false;
-           }
+               if (!urlLongValidation.test(url) && !urlShortValidation.test(url)) {
+                   Materialize.toast('URL invalid', 4000);
+                   validatePassed = false;
+               }
 
-           if (!emailValidation.test(email)){
-               Materialize.toast('Email invalid', 4000);
-               validatePassed = false;
-           }
-           if (validatePassed) {
+               if (!emailValidation.test(email)){
+                   Materialize.toast('Email invalid', 4000);
+                   validatePassed = false;
+               }
+               if (validatePassed) {
 
-               var accId;
-               if (Meteor.user()){
-                   var userDetails = AccountDetails.findOne({createdBy:Meteor.userId()});
-                   if (userDetails){
-                       accId = userDetails._id;
-                   } else{
+                   var accId;
+                   if (Meteor.user()){
+                       var userDetails = AccountDetails.findOne({createdBy:Meteor.userId()});
+                       if (userDetails){
+                           accId = userDetails._id;
+                       } else{
+                           accId = AccountDetails.insert({
+                               name: '',
+                               url: url,
+                               email: email,
+                               instances:  [],
+                               createdBy: Meteor.userId()
+                           });
+                       }
+                   }else{
                        accId = AccountDetails.insert({
                            name: '',
                            url: url,
                            email: email,
-                           instances:  [],
-                           createdBy: Meteor.userId()
+                           instances:  []
                        });
                    }
-               }else{
-                   accId = AccountDetails.insert({
-                       name: '',
-                       url: url,
-                       email: email,
-                       instances:  []
+                   var user = accId;
+
+
+                   var unloggedIds = this.unloggedIds;
+                   unloggedIds.push(accId);
+                   Instance.update(this._id, {$set: {unloggedIds: unloggedIds}});
+                   Session.set('InstanceId', this._id);
+                   Session.set('UserEmail', email);
+
+
+                   var path = 'http://api.nusmods.com/';
+                   var dayArr = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+                   $.ajaxSetup({
+                       async: false
                    });
-               }
-               var user = accId;
 
 
-               var unloggedIds = this.unloggedIds;
-               unloggedIds.push(accId);
-               Instance.update(this._id, {$set: {unloggedIds: unloggedIds}});
-               Session.set('InstanceId', this._id);
+                   var decoded;
+                   var tdata = Instance.findOne({_id: Session.get('InstanceId')}).tdata;
+                   if (url.length == 21) {
+                       $.getJSON('https://nusmods.com/redirect.php?timetable=' + url, function (json) {
+                           decoded = decodeURIComponent(json.redirectedUrl);
+                       });
+                   } else {
+                       decoded = decodeURIComponent(url);
+                   }
+
+                   var split = decoded.split('/');
+                   var year = split[split.length - 2];
+                   var last = split.pop();
+                   var sem = last[3];
+                   var sessions = last.split('?')[1].split('&');
 
 
-               var path = 'http://api.nusmods.com/';
-               var dayArr = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-               $.ajaxSetup({
-                   async: false
-               });
+                   sessions.forEach(function (session) {
+                       var modId = session.split('[')[0];
+                       var classType = session.slice(session.indexOf('[') + 1, session.indexOf(']')).toLowerCase();
+                       var classSlot = session.split('=').pop();
 
+                       $.getJSON(path + year + '/' + sem + '/modules/' + modId + '/timetable.json', function (json) {
 
-               var decoded;
-               var tdata = Instance.findOne({_id: Session.get('InstanceId')}).tdata;
-               if (url.length == 21) {
-                   $.getJSON('https://nusmods.com/redirect.php?timetable=' + url, function (json) {
-                       decoded = decodeURIComponent(json.redirectedUrl);
-                   });
-               } else {
-                   decoded = decodeURIComponent(url);
-               }
+                           json.forEach(function (lesson) {
+                               if (lesson.ClassNo == classSlot && lesson.LessonType.toLowerCase().slice(0, 3) == classType) {
 
-               var split = decoded.split('/');
-               var year = split[split.length - 2];
-               var last = split.pop();
-               var sem = last[3];
-               var sessions = last.split('?')[1].split('&');
+                                   var hs = parseInt(lesson.StartTime.slice(0, 2));
+                                   var ms = parseInt(lesson.StartTime.slice(2, 4)) == 0 ? 0 : 0.5;
+                                   var he = parseInt(lesson.EndTime.slice(0, 2));
+                                   var me = parseInt(lesson.EndTime.slice(2, 4));
+                                   var day = lesson.DayText;
+                                   var dayIdx = dayArr.indexOf(day);
 
+                                   //console.log(classSlot, classType, modId);
+                                   for (var i = ((hs + ms) * 2) - 16; i < ((he + me) * 2) - 16; i++) {
+                                       tdata[i][dayIdx].push(user);
+                                       //console.log(dayIdx, i);
 
-               sessions.forEach(function (session) {
-                   var modId = session.split('[')[0];
-                   var classType = session.slice(session.indexOf('[') + 1, session.indexOf(']')).toLowerCase();
-                   var classSlot = session.split('=').pop();
+                                   }
 
-                   $.getJSON(path + year + '/' + sem + '/modules/' + modId + '/timetable.json', function (json) {
-
-                       json.forEach(function (lesson) {
-                           if (lesson.ClassNo == classSlot && lesson.LessonType.toLowerCase().slice(0, 3) == classType) {
-
-                               var hs = parseInt(lesson.StartTime.slice(0, 2));
-                               var ms = parseInt(lesson.StartTime.slice(2, 4)) == 0 ? 0 : 0.5;
-                               var he = parseInt(lesson.EndTime.slice(0, 2));
-                               var me = parseInt(lesson.EndTime.slice(2, 4));
-                               var day = lesson.DayText;
-                               var dayIdx = dayArr.indexOf(day);
-
-                               //console.log(classSlot, classType, modId);
-                               for (var i = ((hs + ms) * 2) - 16; i < ((he + me) * 2) - 16; i++) {
-                                   tdata[i][dayIdx].push(user);
-                                   //console.log(dayIdx, i);
 
                                }
+                           }); // end json.forEach
 
 
-                           }
-                       }); // end json.forEach
+                       }); // end getJSON
+
+                   }); // end sessions.forEach
+
+                   // endless loop update, why?
+
+                   var sessId = Session.get('InstanceId');
+                   Instance.update(sessId, {$set: {tdata: tdata}});
 
 
-                   }); // end getJSON
-
-               }); // end sessions.forEach
-
-               // endless loop update, why?
-
-               var sessId = Session.get('InstanceId');
-               Instance.update(sessId, {$set: {tdata: tdata}});
+                   $.ajaxSetup({
+                       async: true
+                   });
 
 
-               $.ajaxSetup({
-                   async: true
-               });
+                   Router.go('timetable', {_id: this._id});
+           }
 
-
-               Router.go('timetable', {_id: this._id});
            }
        }
     });
@@ -282,7 +288,7 @@ if (Meteor.isClient) {
 
 
                 Instance.insert({
-                    name: 'Un-Named Instance',
+                    name: 'Un-Named Group',
                     unloggedIds: [accId],
                     //  Half hr block represented[ [],[],[],[],[] ] , each element is a day
                     tdata: [[[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []]]
@@ -296,6 +302,7 @@ if (Meteor.isClient) {
                     var url = $('#input_url').val();
 
                     Session.set('InstanceId', results);
+                    Session.set('UserEmail', email);
 
                     var path = 'http://api.nusmods.com/';
                     var dayArr = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
@@ -383,7 +390,7 @@ if (Meteor.isClient) {
             var minArr = ["00","30"];
 
 
-            var final = '<table id="timetable" class="striped"><thead style="font-size:small;"><tr><th></th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th></tr></thead>';
+            var final = '<table id="timetable" class="striped"><thead style="font-size:small;"><tr><th style="width:70px;"></th><th class="cellWidth">Monday</th><th class="cellWidth">Tuesday</th><th class="cellWidth">Wednesday</th><th class="cellWidth">Thursday</th><th class="cellWidth">Friday</th></tr></thead>';
             //console.log(this);
             var tdata = this.tdata;
 
@@ -394,7 +401,7 @@ if (Meteor.isClient) {
                     final += '<tr><th>'+hrArr[h]+minArr[m]+'</th>';
 
                     for (var d=0; d<5; d++){
-                        final += '<td>';
+                        final += '<td class="h'+hrArr[h]+'m'+minArr[m]+'d'+String(d)+'">';
                         var container = tdata[h*2+m][d];
 
                         for (var els=0; els<container.length; els++){
@@ -402,9 +409,10 @@ if (Meteor.isClient) {
                             //final += container[els];
                             if(container[els] != ""){
 
-                                final += '<span class="color';
+                                final += '<span class="color' ;
                                 final += String(els);
-                                final += '">&nbsp;</span><span>&nbsp;</span>';
+                                final += ' '+ container[els];
+                                final+= '">&nbsp;&nbsp;</span><span>&nbsp;</span>';
                             } else {
                                 final += '<span>&nbsp;</span>';
                             }
@@ -423,12 +431,17 @@ if (Meteor.isClient) {
             return final;
         },
         'legend' : function(unloggedIds){
-            var final = "";
+            var final = "<div>";
             for (var idx=0; idx<unloggedIds.length; idx++){
                 var user = AccountDetails.findOne({_id:String(unloggedIds[idx])});
-                final += '<div>';
+                final += '<div style="height:35px;">';
+                final += '<div style="width:50px;float:left;">&nbsp;</div>';
                 //console.log(user);
-                final += '<div style="width:500px;" class="color'+String(idx)+'">'+user.email+'</div>';
+                final += '<div style="width:400px;float:left;" class="color'+String(idx)+'">'+user.email+'</div>';
+                final += '<div class="switch">';
+                final += ' <label>Show<input class="toggle ';
+                final += unloggedIds[idx] +'" type="checkbox"><span class="lever"></span>Hide</label></div>';
+                final += '</div>';
                 //console.log(final);
             }
             final += '</div>';
@@ -439,31 +452,127 @@ if (Meteor.isClient) {
         }
     });
 
+    Template.classTable.events({
+        'change .toggle' : function(target){
+            var hrArr = ["08", "09", "10", "11","12","13","14","15","16","17","18","19","20","21","22","23"];
+            var minArr = ["00","30"];
+            var tdata = this.tdata;
+            var className = target.currentTarget.className;
+
+            var detailId = className.split(' ')[1];
+
+
+
+            if (target.currentTarget.checked){
+                //console.log('checked');
+                for (var h=0; h<hrArr.length; h++){
+                    for (var m=0;m<2;m++){
+                        for (var d=0; d<5; d++){
+                            var container = tdata[h*2+m][d];
+                            for (var els=0; els<container.length; els++){
+                                //final += container[els];
+
+                                if(container[els] == detailId){
+
+                                    var spanNum = $('.h'+hrArr[h]+'m'+minArr[m]+'d'+d +' > .'+detailId).index();
+                                    //console.log('.h'+hrArr[h]+'m'+minArr[m]+'d'+d +'  span:nth-child('+(spanNum+2)+')');
+                                    $('.h'+hrArr[h]+'m'+minArr[m]+'d'+d +'  span:nth-child('+(spanNum+2)+')').remove();
+                                    $('.h'+hrArr[h]+'m'+minArr[m]+'d'+d +' > .'+detailId).remove();
+                                    //console.log("containerLength", container.length);
+                                    //console.log("spanCount", $('.h'+hrArr[h]+'m'+minArr[m]+'d'+d).length); BUG WITH REMOVING SPAN, CANNOT REMOVE FROM CONTAINER EL BECAUSE CONTAINER LEN FIXED
+
+
+                                    //console.log('.h'+hrArr[h]+'m'+minArr[m]+'d'+d +'  span:nth-child('+(els*2+2)+')');
+
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                console.log('unchecked');
+                for (var h=0; h<hrArr.length; h++){
+                    for (var m=0;m<2;m++){
+                        for (var d=0; d<5; d++){
+                            var container = tdata[h*2+m][d];
+                            for (var els=0; els<container.length; els++){
+                                //final += container[els];
+                                if(container[els] == detailId){
+                                    $('.h'+hrArr[h]+'m'+minArr[m]+'d'+d).append('<span class="color'+String(els)+' '+ container[els]+'">&nbsp;&nbsp;</span><span>&nbsp;</span>');
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+
+        }
+    });
+
     Template.timetable.events({
         'click .options' : function(){
             $('#options_modal').openModal();
         },
         'click .share' : function(){
+            var valStatus = true;
+
             var emailValidation = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
 
 
-
+            var instanceUserName = $('#instance_userName').val();
             var instanceName = $('#instance_name').val();
             var instanceDesc = $('#instance_description').val();
             var instanceEmail = $('#instance_email').val();
 
+            var emailArr = instanceEmail.split(',');
 
-            var emailUserTemplate = 'Hi,\n You have recently created a new *INSERTNAME* at http://orbitaltimekeeper.meteor.com/timetable/' + this._id + ' . Please visit the link to access your *INSERTNAME*. \n\n Your friends have been sent their invitations too! You will be able to view their timetables once they have added theirs in.';
+            if (instanceEmail == ''){
+                Materialize.toast('Please fill in your recipient\'s emails', 4000);
+            } else {
+                for (var i=0; i< emailArr.length;i++){
+                    if (!emailValidation.test(emailArr[i].trim())){
+                        Materialize.toast(emailArr[i].trim()+' is not a valid email', 4000);
+                        valStatus = false;
+                    }
+                }
+            }
 
-            var emailShareTemplate = 'Hi, \n You have recently been invited to join *INSERTUSEREMAIL*\'s *INSERTNAME*.\n\n Reason:'+instanceName+'\n\nDescription: '+instanceDesc+ ' \n\n Join us at http://orbitaltimekeeper.meteor.com/timetable/' + this._id +' !';
+            if (instanceUserName == ''){
+                Materialize.toast('Please fill in your name', 4000);
+                valStatus = false;
+            }
 
-           // FOR SHARER Meteor.call('sendEmail', )
-            Meteor.call('sendEmail',  instanceEmail, 'noreply.timekeeper@gmail.com', instanceName, emailShareTemplate);
+            if (instanceName == ''){
+                Materialize.toast('Please give your group a name', 4000);
+                valStatus = false;
+            }
 
-            var instanceId = this._id;
-            Instance.update(instanceId, {$set: {name: instanceName}});
-            $('#options_modal').closeModal();
-            $('#confirmation_modal').openModal();
+            if (instanceDesc == ''){
+                Materialize.toast('Please fill in a short description', 4000);
+                valStatus = false;
+            }
+
+
+
+
+            var emailUserTemplate = 'Hi '+instanceUserName+',\nYou have recently created a new Group at http://orbitaltimekeeper.meteor.com/timetable/' + this._id + ' . Please visit the link to access your Group! \n\nYour friends have been sent their invitations too! You will be able to view their timetables once they have added theirs in.';
+
+            var emailShareTemplate = 'Hi, \nYou have recently been invited to join '+instanceUserName+'\'s Group!\n\nReason:'+instanceName+'\n\nDescription: '+instanceDesc+ ' \n\nJoin us at http://orbitaltimekeeper.meteor.com/timetable/' + this._id +' to view your Group, or visit http://orbitaltimekeeper.meteor.com/startup/'+this._id+' to add your timetable to the Group!';
+            if (valStatus){
+
+                Meteor.call('sendEmail',  instanceEmail, 'noreply.timekeeper@gmail.com', instanceName, emailShareTemplate);
+
+                if (Session.get('UserEmail') != ''){
+                    Meteor.call('sendEmail', Session.get('UserEmail'), 'noreply.timekeeper@gmail.com', instanceName, emailUserTemplate);
+                }
+
+                var instanceId = this._id;
+                Instance.update(instanceId, {$set: {name: instanceName}});
+                $('#options_modal').closeModal();
+                $('#confirmation_modal').openModal();
+            }
+
         }
     });
 
@@ -473,6 +582,12 @@ if (Meteor.isClient) {
            var name = Instance.findOne({_id: instanceId}).name;
 
            return name;
+       }
+    });
+
+    Template.dashboard.events({
+       'click .new' : function(){
+           Router.go('/startup');
        }
     });
   //Template.loggedIn.helpers({
