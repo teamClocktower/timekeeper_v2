@@ -77,16 +77,19 @@ if (Meteor.isClient) {
 
     Template.startup_add.events({
        'click .next' : function(){
+           // does not insert if too many timetables (color scheme for 7 timetables only)
            if (this.unloggedIds.length > 7){
                Materialize.toast('Too many timetables for this group', 4000);
            } else{
                var validatePassed = true;
+               // regex patterns for the various inputs
                var urlLongValidation = /nusmods.com\/timetable/;
                var urlShortValidation = /modsn.us/;
                var emailValidation = /^(([^<>()[\]\.,;:\s@\"]+(\.[^<>()[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
                var url = $('#input_url').val();
                var email = $('#input_email').val();
 
+               // perform regex checking, does not continue if fails
                if (!urlLongValidation.test(url) && !urlShortValidation.test(url)) {
                    Materialize.toast('URL invalid', 4000);
                    validatePassed = false;
@@ -96,9 +99,13 @@ if (Meteor.isClient) {
                    Materialize.toast('Email invalid', 4000);
                    validatePassed = false;
                }
+
+               // if passes regex
                if (validatePassed) {
 
                    var accId;
+                   // instantiate accId
+                   // loop checks if user is logged in, and assigns the account ID to accId, otherwise, creates new accounts details
                    if (Meteor.user()){
                        var userDetails = AccountDetails.findOne({createdBy:Meteor.userId()});
                        if (userDetails){
@@ -120,11 +127,14 @@ if (Meteor.isClient) {
                            instances:  []
                        });
                    }
+                   // older code used user instead of accId, saves time before refactoring
                    var user = accId;
 
 
+                    // unloggedIds is an array of account IDs that are tagged to this group/instance
                    var unloggedIds = this.unloggedIds;
                    unloggedIds.push(accId);
+                   //updates the variable in the db
                    Instance.update(this._id, {$set: {unloggedIds: unloggedIds}});
                    Session.set('InstanceId', this._id);
                    Session.set('UserEmail', email);
@@ -136,9 +146,9 @@ if (Meteor.isClient) {
                        async: false
                    });
 
-
+                    // decode url so it can be split
                    var decoded;
-                   var tdata = Instance.findOne({_id: Session.get('InstanceId')}).tdata;
+
                    if (url.length == 21) {
                        $.getJSON('https://nusmods.com/redirect.php?timetable=' + url, function (json) {
                            decoded = decodeURIComponent(json.redirectedUrl);
@@ -152,28 +162,37 @@ if (Meteor.isClient) {
                    var last = split.pop();
                    var sem = last[3];
                    var sessions = last.split('?')[1].split('&');
+                    // instantiate timetable data (nested arrays) here so that it can be accessible outside of updating loop
+                   var tdata = Instance.findOne({_id: Session.get('InstanceId')}).tdata;
+                   console.log(tdata);
 
-
+                   // for each class session from the url
                    sessions.forEach(function (session) {
                        var modId = session.split('[')[0];
                        var classType = session.slice(session.indexOf('[') + 1, session.indexOf(']')).toLowerCase();
                        var classSlot = session.split('=').pop();
 
+                       // call relevant api
                        $.getJSON(path + year + '/' + sem + '/modules/' + modId + '/timetable.json', function (json) {
-
+                            // for each json
                            json.forEach(function (lesson) {
+                               // check if details of json and class session match
                                if (lesson.ClassNo == classSlot && lesson.LessonType.toLowerCase().slice(0, 3) == classType) {
-
+                                   // update tdata based of start/end time of this particular class/session
                                    var hs = parseInt(lesson.StartTime.slice(0, 2));
                                    var ms = parseInt(lesson.StartTime.slice(2, 4)) == 0 ? 0 : 0.5;
                                    var he = parseInt(lesson.EndTime.slice(0, 2));
-                                   var me = parseInt(lesson.EndTime.slice(2, 4));
+                                   var me = parseInt(lesson.EndTime.slice(2, 4) == 0 ? 0 : 0.5);
                                    var day = lesson.DayText;
                                    var dayIdx = dayArr.indexOf(day);
 
                                    //console.log(classSlot, classType, modId);
                                    for (var i = ((hs + ms) * 2) - 16; i < ((he + me) * 2) - 16; i++) {
+
+                                        // updating timetable data array
                                        tdata[i][dayIdx].push(user);
+
+
                                        //console.log(dayIdx, i);
 
                                    }
@@ -190,6 +209,8 @@ if (Meteor.isClient) {
                    // endless loop update, why?
 
                    var sessId = Session.get('InstanceId');
+                   // set timetable data array in db
+                   console.log(tdata);
                    Instance.update(sessId, {$set: {tdata: tdata}});
 
 
@@ -198,7 +219,8 @@ if (Meteor.isClient) {
                    });
 
 
-                   Router.go('timetable', {_id: this._id});
+
+                  Router.go('timetable', {_id: this._id});
            }
 
            }
@@ -287,19 +309,22 @@ if (Meteor.isClient) {
                 }
 
 
-                Instance.insert({
+                var results = Instance.insert({
                     name: 'Un-Named Group',
                     unloggedIds: [accId],
                     //  Half hr block represented[ [],[],[],[],[] ] , each element is a day
                     tdata: [[[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []], [[], [], [], [], []]]
 
-                }, function (error, results) {
+                });
 
+
+
+                    console.log(results);
                     var userInstances = AccountDetails.findOne({_id:accId}).instances;
                     userInstances.push(results);
 
                     AccountDetails.update(accId, {$set: {instances: userInstances}});
-                    var url = $('#input_url').val();
+
 
                     Session.set('InstanceId', results);
                     Session.set('UserEmail', email);
@@ -313,9 +338,10 @@ if (Meteor.isClient) {
 
                     var decoded;
                     var tdata = Instance.findOne({_id: Session.get('InstanceId')}).tdata;
+                console.log(tdata);
                     if (url.length == 21) {
                         $.getJSON('https://nusmods.com/redirect.php?timetable=' + url, function (json) {
-                            decoded = decodeURIComponent(json.redirectedUrl);
+                             decoded = decodeURIComponent(json.redirectedUrl);
                         });
                     } else {
                         decoded = decodeURIComponent(url);
@@ -327,8 +353,9 @@ if (Meteor.isClient) {
                     var sem = last[3];
                     var sessions = last.split('?')[1].split('&');
 
-
+                    console.log('before sessions');
                     sessions.forEach(function (session) {
+
                         var modId = session.split('[')[0];
                         var classType = session.slice(session.indexOf('[') + 1, session.indexOf(']')).toLowerCase();
                         var classSlot = session.split('=').pop();
@@ -341,12 +368,14 @@ if (Meteor.isClient) {
                                     var hs = parseInt(lesson.StartTime.slice(0, 2));
                                     var ms = parseInt(lesson.StartTime.slice(2, 4)) == 0 ? 0 : 0.5;
                                     var he = parseInt(lesson.EndTime.slice(0, 2));
-                                    var me = parseInt(lesson.EndTime.slice(2, 4));
+                                    var me = parseInt(lesson.EndTime.slice(2, 4))== 0 ? 0 : 0.5;
                                     var day = lesson.DayText;
                                     var dayIdx = dayArr.indexOf(day);
 
                                     //console.log(classSlot, classType, modId);
                                     for (var i = ((hs + ms) * 2) - 16; i < ((he + me) * 2) - 16; i++) {
+                                        console.log(hs, ms, he, me);
+                                        console.log(i);
                                         tdata[i][dayIdx].push(accId);
                                         //console.log(dayIdx, i);
 
@@ -360,9 +389,9 @@ if (Meteor.isClient) {
                         }); // end getJSON
 
                     }); // end sessions.forEach
-
+                    console.log('test test');
                     // endless loop update, why?
-
+                    console.log('after sessions');
                     var sessId = Session.get('InstanceId');
 
                     Instance.update(sessId, {$set: {tdata: tdata}});
@@ -376,7 +405,7 @@ if (Meteor.isClient) {
                     Router.go('timetable', {_id: results});
 
 
-                });
+
             }
 
         }
@@ -385,7 +414,8 @@ if (Meteor.isClient) {
 
     Template.classTable.helpers({
         'timetableview' : function(){
-            //console.log(this);
+            console.log(this);
+
             var hrArr = ["08", "09", "10", "11","12","13","14","15","16","17","18","19","20","21","22","23"];
             var minArr = ["00","30"];
 
@@ -408,9 +438,10 @@ if (Meteor.isClient) {
 
                             //final += container[els];
                             if(container[els] != ""){
+                                var idx = this.unloggedIds.indexOf(container[els]);
 
                                 final += '<span class="color' ;
-                                final += String(els);
+                                final += String(idx);
                                 final += ' '+ container[els];
                                 final+= '">&nbsp;&nbsp;</span><span>&nbsp;</span>';
                             } else {
@@ -460,6 +491,8 @@ if (Meteor.isClient) {
             var className = target.currentTarget.className;
 
             var detailId = className.split(' ')[1];
+            var idx = this.unloggedIds.indexOf(detailId);
+
 
 
 
@@ -490,7 +523,7 @@ if (Meteor.isClient) {
                     }
                 }
             } else {
-                console.log('unchecked');
+
                 for (var h=0; h<hrArr.length; h++){
                     for (var m=0;m<2;m++){
                         for (var d=0; d<5; d++){
@@ -498,7 +531,8 @@ if (Meteor.isClient) {
                             for (var els=0; els<container.length; els++){
                                 //final += container[els];
                                 if(container[els] == detailId){
-                                    $('.h'+hrArr[h]+'m'+minArr[m]+'d'+d).append('<span class="color'+String(els)+' '+ container[els]+'">&nbsp;&nbsp;</span><span>&nbsp;</span>');
+
+                                    $('.h'+hrArr[h]+'m'+minArr[m]+'d'+d).append('<span class="color'+String(idx)+' '+ container[els]+'">&nbsp;&nbsp;</span><span>&nbsp;</span>');
                                 }
                             }
                         }
@@ -602,7 +636,7 @@ if (Meteor.isServer) {
 
 
   Meteor.startup(function () {
-      process.env.MAIL_URL="smtp://noreply.timekeeper@gmail.com:PASSWORD@smtp.gmail.com:465/";
+      process.env.MAIL_URL="smtp://noreply.timekeeper@gmail.com:qwezxcqwezxc@smtp.gmail.com:465/";
 
     // code to run on server at startup
 
